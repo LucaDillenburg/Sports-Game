@@ -35,6 +35,10 @@ class Player extends SpriteAnimationComponent with HasGameRef {
     anchor = Anchor.center;
   }
 
+  late final sprite = Flame.images.load(
+    isEnemy ? Assets.redPlayerSprite : Assets.bluePlayerSprite,
+  );
+
   static final _textureSize = Vector2(140, 140);
   static const _size = 40.0;
 
@@ -44,20 +48,38 @@ class Player extends SpriteAnimationComponent with HasGameRef {
   @override
   Future<void> onLoad() async {
     super.onLoad();
-
     position = gameRef.size / 2;
+    await changeAnimation(walking: false);
+  }
 
-    final assetPath =
-        isEnemy ? Assets.redPlayerSprite : Assets.bluePlayerSprite;
-    final sprite = await Flame.images.load(assetPath);
-    animation = SpriteAnimation.fromFrameData(
-      sprite,
-      SpriteAnimationData.sequenced(
-        amount: 3,
-        stepTime: 0.2,
-        textureSize: _textureSize,
-      ),
-    );
+  bool? _walkingAnimation;
+  Future<void> changeAnimation({required bool walking}) async {
+    if (_walkingAnimation == walking) return;
+    _walkingAnimation = walking;
+
+    if (walking) {
+      animation = SpriteAnimation.fromFrameData(
+        await sprite,
+        SpriteAnimationData.range(
+          start: 1,
+          end: 2,
+          amount: 3,
+          stepTimes: [0.2, 0.2],
+          textureSize: _textureSize,
+        ),
+      );
+    } else {
+      animation = SpriteAnimation.fromFrameData(
+        await sprite,
+        SpriteAnimationData.range(
+          start: 0,
+          end: 0,
+          amount: 3,
+          stepTimes: [1],
+          textureSize: _textureSize,
+        ),
+      );
+    }
   }
 
   @override
@@ -88,6 +110,9 @@ class Player extends SpriteAnimationComponent with HasGameRef {
     if (!offset.isZero()) {
       position.add(offset * delta);
       angle = offsetAngle(Offset(offset.x, offset.y));
+      changeAnimation(walking: true);
+    } else {
+      changeAnimation(walking: false);
     }
   }
 
