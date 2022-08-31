@@ -1,5 +1,6 @@
 import 'dart:math';
 
+import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
@@ -15,6 +16,7 @@ class MePlayer extends Player {
 
   void updateWalkDirection(Offset offset) {
     _offset = offset * AppConstants.meSpeed;
+    print('offset player: $offset | _offset: $_offset');
   }
 }
 
@@ -44,6 +46,8 @@ class Player extends SpriteAnimationComponent with HasGameRef {
 
   final bool isEnemy;
   final bool selected;
+
+  Offset _offset = Offset(0, 0);
 
   @override
   Future<void> onLoad() async {
@@ -96,20 +100,16 @@ class Player extends SpriteAnimationComponent with HasGameRef {
     super.render(c);
   }
 
-  var _offset = Offset(0, 0);
-
   @override
   void update(double delta) {
     super.update(delta);
 
-    // TODO: fixed directions
-    // final direction = DirectionUtils.from(offset.dx, offset.dy);
-    // _offset = direction.multiply(offset.distance * _speed);
+    if (!isEnemy) print('_offset walk: $_offset');
 
     final offset = Vector2(walkX, walkY);
     if (!offset.isZero()) {
-      position.add(offset * delta);
-      angle = offsetAngle(Offset(offset.x, offset.y));
+      center.add(offset * sqrt(delta));
+      angle = offsetAngle(_offset);
       changeAnimation(walking: true);
     } else {
       changeAnimation(walking: false);
@@ -117,21 +117,21 @@ class Player extends SpriteAnimationComponent with HasGameRef {
   }
 
   double get walkX {
-    if (position.x + _offset.dx < 0) {
-      return -position.x;
+    if (center.x + _offset.dx < 0) {
+      return -center.x;
     }
-    if (position.x + _offset.dx + size.x > gameRef.size.x) {
-      return gameRef.size.x - (position.x + size.x);
+    if (center.x + _offset.dx > gameRef.size.x) {
+      return gameRef.size.x - center.x;
     }
     return _offset.dx;
   }
 
   double get walkY {
-    if (position.y + _offset.dy < 0) {
-      return -position.y;
+    if (center.y + _offset.dy < 0) {
+      return -center.y;
     }
-    if (position.y + _offset.dy + size.y > gameRef.size.y) {
-      return gameRef.size.y - (position.y + size.y);
+    if (center.y + _offset.dy > gameRef.size.y) {
+      return gameRef.size.y - center.y;
     }
     return _offset.dy;
   }

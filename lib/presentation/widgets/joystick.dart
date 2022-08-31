@@ -58,13 +58,7 @@ class JoypadState extends State<Joypad> {
   void updateDelta(Offset newDelta) {
     final normalizedDelta = newDelta / _maxDelta;
     assert(normalizedDelta.distance.abs() <= 1.01);
-    final normalizedDelta2 = Offset(
-      min(max(normalizedDelta.dx, -1), 1),
-      min(max(normalizedDelta.dy, -1), 1),
-    );
-    assert(normalizedDelta2.dx.abs() <= 1 && normalizedDelta2.dy.abs() <= 1);
-    assert(normalizedDelta2.distance.abs() <= 1.01);
-    widget.onChanged(normalizedDelta2);
+    widget.onChanged(normalizedDelta);
 
     setState(() {
       delta = newDelta;

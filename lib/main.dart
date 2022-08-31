@@ -2,7 +2,7 @@ import 'dart:async';
 
 import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
-import 'presentation/page.dart';
+import 'presentation/game.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();

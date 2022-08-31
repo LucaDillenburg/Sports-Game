@@ -8,6 +8,6 @@ class Assets {
 }
 
 class AppConstants {
-  static const meSpeed = 200.0;
-  static const enemySpeed = 130.0;
+  static const meSpeed = 30.0;
+  static const enemySpeed = 22.0;
 }
