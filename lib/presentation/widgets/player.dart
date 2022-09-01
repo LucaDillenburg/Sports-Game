@@ -9,19 +9,19 @@ import '../../domain/config.dart';
 import '../../domain/intelligence.dart';
 import '../../domain/utils.dart';
 import '../../theme.dart';
+import 'components.dart';
 
 class MePlayer extends Player {
   MePlayer({required bool selected})
-      : super(selected: selected, isEnemy: false);
+      : super(selected: selected, isEnemy: false, hasBall: true);
 
   void updateWalkDirection(Offset offset) {
     _offset = offset * AppConstants.meSpeed;
-    print('offset player: $offset | _offset: $_offset');
   }
 }
 
 class EnemyPlayer extends Player {
-  EnemyPlayer() : super(selected: false, isEnemy: true);
+  EnemyPlayer() : super(selected: false, isEnemy: true, hasBall: false);
 
   final enemyIntelligence = EnemyIntelligence();
 
@@ -32,28 +32,24 @@ class EnemyPlayer extends Player {
 }
 
 class Player extends SpriteAnimationComponent with HasGameRef {
-  Player({required this.selected, required this.isEnemy})
-      : super(size: Vector2(_size, _size)) {
+  Player({required this.selected, required this.isEnemy, required this.hasBall})
+      : super(size: Vector2(40, 40)) {
     anchor = Anchor.center;
   }
-
-  late final sprite = Flame.images.load(
-    isEnemy ? Assets.redPlayerSprite : Assets.bluePlayerSprite,
-  );
-
-  static final _textureSize = Vector2(140, 140);
-  static const _size = 40.0;
 
   final bool isEnemy;
   final bool selected;
 
   Offset _offset = Offset(0, 0);
+  bool hasBall;
 
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    position = gameRef.size / 2;
     await changeAnimation(walking: false);
+    if (hasBall) {
+      add(Ball()..center = Vector2(size.x / 2 + 20, size.y / 2));
+    }
   }
 
   bool? _walkingAnimation;
@@ -61,29 +57,9 @@ class Player extends SpriteAnimationComponent with HasGameRef {
     if (_walkingAnimation == walking) return;
     _walkingAnimation = walking;
 
-    if (walking) {
-      animation = SpriteAnimation.fromFrameData(
-        await sprite,
-        SpriteAnimationData.range(
-          start: 1,
-          end: 2,
-          amount: 3,
-          stepTimes: [0.2, 0.2],
-          textureSize: _textureSize,
-        ),
-      );
-    } else {
-      animation = SpriteAnimation.fromFrameData(
-        await sprite,
-        SpriteAnimationData.range(
-          start: 0,
-          end: 0,
-          amount: 3,
-          stepTimes: [1],
-          textureSize: _textureSize,
-        ),
-      );
-    }
+    final spriteInfo = Assets.playerSprite(blue: !isEnemy, walking: walking);
+    final sprite = await Flame.images.load(spriteInfo.path);
+    animation = SpriteAnimation.fromFrameData(sprite, spriteInfo.animationData);
   }
 
   @override
@@ -94,7 +70,7 @@ class Player extends SpriteAnimationComponent with HasGameRef {
             ColorTween(begin: appColors.tertiary, end: Colors.white).lerp(0.5)!
         ..strokeWidth = 3
         ..style = PaintingStyle.stroke;
-      c.drawCircle(Offset(size.x / 2, size.y / 2), _size * 0.7, color);
+      c.drawCircle(Offset(size.x / 2, size.y / 2), size.x * 0.7, color);
     }
 
     super.render(c);
@@ -103,8 +79,6 @@ class Player extends SpriteAnimationComponent with HasGameRef {
   @override
   void update(double delta) {
     super.update(delta);
-
-    if (!isEnemy) print('_offset walk: $_offset');
 
     final offset = Vector2(walkX, walkY);
     if (!offset.isZero()) {

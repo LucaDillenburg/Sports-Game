@@ -29,3 +29,5 @@ flutter:
     - assets/images/basket.svg
     - assets/images/blue_player_sprite.png
     - assets/images/red_player_sprite.png
+    - assets/images/bouncing_ball_sprite.png
+    - assets/images/spinning_ball_sprite.png

@@ -13,7 +13,7 @@ A new Flutter project.
 
 [X] Collision (basketball)
 
-[ ] Ball (change size)
+[X] Bouncing Ball
 
 [ ] Throw Ball
 

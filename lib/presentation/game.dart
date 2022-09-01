@@ -1,6 +1,6 @@
 import 'dart:async';
+import 'dart:math';
 
-import 'package:flame/components.dart';
 import 'package:flame/game.dart';
 import 'package:flutter/material.dart';
 
@@ -37,8 +37,7 @@ class MainGameState extends State<MainGamePage> {
                 aspectRatio: 2,
                 child: GameWidget(
                   game: game,
-                  backgroundBuilder: (context) =>
-                      Expanded(child: Assets.court()),
+                  backgroundBuilder: (context) => Assets.court(),
                 ),
               ),
             ),
@@ -61,13 +60,15 @@ class MainGameState extends State<MainGamePage> {
 }
 
 class SportsGame extends FlameGame with HasCollisionDetection {
-  final me = MePlayer(selected: false);
-  final enemy = EnemyPlayer();
+  late final me = MePlayer(selected: false)
+    ..position = size / 2 - Vector2(50, 0);
+  late final enemy = EnemyPlayer()
+    ..position = size / 2 - Vector2(-size.x * 0.25, 0)
+    ..angle = pi;
 
   @override
   Future<void> onLoad() async {
     super.onLoad();
-    add(ScreenHitbox());
     add(me);
     add(enemy);
   }
