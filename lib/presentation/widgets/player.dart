@@ -1,11 +1,10 @@
 import 'dart:math';
 
-import 'package:flame/collisions.dart';
 import 'package:flame/components.dart';
 import 'package:flame/flame.dart';
 import 'package:flutter/material.dart';
 
-import '../../domain/config.dart';
+import '../../config.dart';
 import '../../domain/intelligence.dart';
 import '../../domain/utils.dart';
 import '../../theme.dart';
@@ -13,42 +12,51 @@ import 'components.dart';
 
 class MePlayer extends Player {
   MePlayer({required bool selected})
-      : super(selected: selected, isEnemy: false, hasBall: true);
+      : super(selected: selected, isEnemy: false);
 
   void updateWalkDirection(Offset offset) {
-    _offset = offset * AppConstants.meSpeed;
+    _walkIntent = offset * AppConstants.meSpeed;
   }
 }
 
 class EnemyPlayer extends Player {
-  EnemyPlayer() : super(selected: false, isEnemy: true, hasBall: false);
+  EnemyPlayer() : super(selected: false, isEnemy: true);
 
   final enemyIntelligence = EnemyIntelligence();
 
   void walk(Vector2 user) {
-    _offset = enemyIntelligence.walk(user.toOffset(), position.toOffset()) *
+    _walkIntent = enemyIntelligence.walk(user.toOffset(), position.toOffset()) *
         AppConstants.enemySpeed;
   }
 }
 
 class Player extends SpriteAnimationComponent with HasGameRef {
-  Player({required this.selected, required this.isEnemy, required this.hasBall})
+  Player({required this.selected, required this.isEnemy})
       : super(size: Vector2(40, 40)) {
     anchor = Anchor.center;
   }
 
+  late final ball = Ball()..center = Vector2(size.x / 2 + 20, size.y / 2);
   final bool isEnemy;
   final bool selected;
 
-  Offset _offset = Offset(0, 0);
-  bool hasBall;
+  Offset _walkIntent = Offset(0, 0);
 
   @override
   Future<void> onLoad() async {
     super.onLoad();
     await changeAnimation(walking: false);
+  }
+
+  bool _hasBall = false;
+  bool get hasBall => _hasBall;
+  set hasBall(bool hasBall) {
+    if (_hasBall == hasBall) return;
+    _hasBall = hasBall;
     if (hasBall) {
-      add(Ball()..center = Vector2(size.x / 2 + 20, size.y / 2));
+      add(ball);
+    } else {
+      remove(ball);
     }
   }
 
@@ -76,37 +84,24 @@ class Player extends SpriteAnimationComponent with HasGameRef {
     super.render(c);
   }
 
+  late final courtBoundaries =
+      WalkBoundaries(size: Offset(gameRef.size.x, gameRef.size.y));
   @override
   void update(double delta) {
     super.update(delta);
 
-    final offset = Vector2(walkX, walkY);
-    if (!offset.isZero()) {
-      center.add(offset * sqrt(delta));
-      angle = offsetAngle(_offset);
+    final canWalk = courtBoundaries
+        .walkInside(
+          center: center.toOffset(),
+          walkIntent: _walkIntent,
+        )
+        .toVector2();
+    if (!canWalk.isZero()) {
+      center.add(canWalk * sqrt(delta));
+      angle = offsetAngle(_walkIntent);
       changeAnimation(walking: true);
     } else {
       changeAnimation(walking: false);
     }
-  }
-
-  double get walkX {
-    if (center.x + _offset.dx < 0) {
-      return -center.x;
-    }
-    if (center.x + _offset.dx > gameRef.size.x) {
-      return gameRef.size.x - center.x;
-    }
-    return _offset.dx;
-  }
-
-  double get walkY {
-    if (center.y + _offset.dy < 0) {
-      return -center.y;
-    }
-    if (center.y + _offset.dy > gameRef.size.y) {
-      return gameRef.size.y - center.y;
-    }
-    return _offset.dy;
   }
 }

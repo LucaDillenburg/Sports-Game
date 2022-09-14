@@ -69,3 +69,8 @@ extension DirectionUtils on Direction {
     }
   }
 }
+
+extension OffsetExtensions on Offset {
+  Vector2 toVector2() => Vector2(dx, dy);
+  bool get isZero => dx == 0 && dy == 0;
+}
